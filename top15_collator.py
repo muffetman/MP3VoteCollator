@@ -2,7 +2,7 @@
 
 ## This python script will automatically collate votes for an MP3 music countdown.
 ## The script must be run from a base directory, with votes for each person stored in individual sub-directories, named with the voter's name.
-## All votes must be in MP3 format and MUST be prepended with a number, starting from 01. For example: 01=Lowest vote, 15=Highest vote.
+## All votes must be in Mp3 format and MUST be prepended with a number, starting from 01. For example: 01=Lowest vote, 15=Highest vote.
 ## This is an example of what a file should look like: 15. Foo Fighters - Walk.mp3. This song would receive 15 votes from this person.
 
 ## HOW IT WORKS:
@@ -20,10 +20,20 @@ print("*****Welcome to the MP3 Vote Collator*****" + '\n')
 # Global variables and lists
 file_extension = (".mp3", ".MP3", ".Mp3", ".mP3")
 results_file = "results_out.csv"
+tts_script = "tts_script"
 votes = defaultdict(list)
 tally = Counter()
+speaker_text = ()
 base_dir = os.getcwd()
 ignore_list = ["Playlist"] # Ignore this dir to avoid issues when copying MP3 files(I.e. src/dst are the same). This dir must be empty prior to running script
+
+""" Check to see if Playlist directory is present. If not, create it """
+
+for subdir, dirs, files in os.walk(base_dir):
+	if not os.path.exists("Playlist"):
+		os.makedirs("Playlist")
+	else:
+		break
 
 def check_mp3s():
 	""" Checks all MP3 files to ensure they are in the correct format """
@@ -47,6 +57,7 @@ def tally_votes():
 
 	global votes
 	global tally
+	global speaker_text
 	print('\n' + "STAGE 2. Processing Votes..." + '\n')
 	for subdir, dirs, files in os.walk(base_dir):
 		dirs[:] = [d for d in dirs if d not in ignore_list]
@@ -54,9 +65,11 @@ def tally_votes():
 			if file.endswith(file_extension):
 				vote_count, song, _ = file.lower().split('.')
 				_, voter_name = os.path.split(subdir)
+				voice_script = (vote_count + " votes from " + voter_name + ".")
 				try:
 					tally[song] += int(vote_count) # Adds song to tally. If song already exists, adds votes to that song
-					votes[song].append((voter_name, int(vote_count))) # Adds voter name and vote count to votes dict
+					votes[song].append((voice_script))
+					#votes[song].append((voter_name, int(vote_count))) # Adds voter name and vote count to votes dict
 				except:
 					break
 
@@ -85,6 +98,17 @@ def process_result():
 			if iteration >= 2:
 				break
 		print('\n' + "There are a total number of " + str(len(tally)) + " songs in this year's count.")
+
+
+def speaker_script():
+	""" This function will write the script for festival TTS """
+
+	print("Creating script for festival TTS" + '\n')
+	with open(results_file, 'r') as results, open(tts_script, 'w') as speakerscript:
+		reader = csv.reader(results)
+		for iteration, row in enumerate(csv.reader(results)):
+			text = ("Song number {} is, {}, with a total number of {} votes".format(range(1, 1000, 1)[iteration], row[0], row[1]) + '. ' + '|' + '\n')
+			speakerscript.write(text)
 
 
 def process_mp3s():
@@ -117,5 +141,6 @@ if __name__ == '__main__':
 	check_mp3s()
 	tally_votes()
 	write_tally()
+	speaker_script()
 	process_result()
 	process_mp3s()
