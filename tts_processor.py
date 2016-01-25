@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-## This is a python program that will perform TTS actions by utilizing the Festival TTS Engine: http://www.cstr.ed.ac.uk/projects/festival
+## This is a python program that will perform TTS actions by utilizing the Festival TTS Engine: http://
 ## Festival 2.1 or higher must be installed for this script to function
 
 import subprocess, csv, itertools, os
 
 def process_tts():
 	wavfolder = 'wavs'
-	file = 'speaker_script'
+	file = 'tts_script'
 	base_dir = os.getcwd()
 	playlist_dir = 'Playlist'
 	with open(file, 'r') as filein:
